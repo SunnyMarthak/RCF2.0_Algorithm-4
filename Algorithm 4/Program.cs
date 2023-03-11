@@ -1,7 +1,5 @@
 ﻿using System.Data;
-using System.Numerics;
 using System.Text.RegularExpressions;
-
 long ConvertToNumbers(string numberString)
 {
     Dictionary<string, long> numberTable = new Dictionary<string, long>
@@ -50,11 +48,51 @@ using (StreamReader streamReader = new StreamReader("../../../Large_Input.txt"))
     string Cases = DecodeText(streamReader.ReadToEnd());
     List<string> List = Cases.Split("\n").Take(n).ToList();
     int Count = 1;
-    foreach (string tLine in List)
+    foreach (string tLine in List.Take(970))
     {
         string line = tLine.Replace(" ", "").Replace("\r", "");
-        DataTable dt = new DataTable();
-        var result = dt.Compute(line, "");
-        Console.WriteLine("Case " + Count++ + "#: " + result.ToString());
+        string[] data = line.Split('=');
+        string Exp = data[0];
+        string ExpResult = data[1];
+        Console.WriteLine("Case " + Count++ + "#: " + (EvaluateExpression(Exp).ToString() == ExpResult.Trim()));
     }
+}
+
+double EvaluateExpression(string expression)
+{
+    expression = expression.Trim().Replace("+", " + ").Replace("-", " - ").Replace("*", " * ").Replace("/", " / ");
+    List<string> list = expression.Split(' ').Where(x => x.Trim().Length > 0).ToList();
+    while(list.Count != 1)
+    {
+        string operation = "";
+        if (list.Contains("/"))
+            operation = "/";
+        else if (list.Contains("*"))
+            operation = "*";
+        else if (list.Contains("-"))
+            operation = "-";
+        else if (list.Contains("+"))
+            operation = "+";
+        int index = list.IndexOf(operation);
+        string first = list[index - 1];
+        string last = list[index + 1];
+        switch (operation)
+        {
+            case "+":
+                list[index] = (Convert.ToDouble(first) + Convert.ToDouble(last)).ToString();
+                break;
+            case "-":
+                list[index] = (Convert.ToDouble(first) - Convert.ToDouble(last)).ToString();
+                break;
+            case "*":
+                list[index] = (Convert.ToDouble(first) * Convert.ToDouble(last)).ToString();
+                break;
+            case "/":
+                list[index] = (Convert.ToDouble(first) / Convert.ToDouble(last)).ToString();
+                break;
+        }
+        list.RemoveAt(index - 1);
+        list.RemoveAt(index);
+    }
+    return Convert.ToDouble(list.First());
 }
