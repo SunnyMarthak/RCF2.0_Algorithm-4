@@ -1,4 +1,5 @@
 ﻿using System.Data;
+using System.Linq.Expressions;
 using System.Text.RegularExpressions;
 long ConvertToNumbers(string numberString)
 {
@@ -42,27 +43,11 @@ string DecodeText(string text)
     }
     return text;
 }
-using (StreamReader streamReader = new StreamReader("../../../Large_Input.txt"))
-{
-    int n = Convert.ToInt32(streamReader.ReadLine());
-    string Cases = DecodeText(streamReader.ReadToEnd());
-    List<string> List = Cases.Split("\n").Take(n).ToList();
-    int Count = 1;
-    foreach (string tLine in List.Take(970))
-    {
-        string line = tLine.Replace(" ", "").Replace("\r", "");
-        string[] data = line.Split('=');
-        string Exp = data[0];
-        string ExpResult = data[1];
-        Console.WriteLine("Case " + Count++ + "#: " + (EvaluateExpression(Exp).ToString() == ExpResult.Trim()));
-    }
-}
-
-double EvaluateExpression(string expression)
+decimal EvaluateExpression(string expression)
 {
     expression = expression.Trim().Replace("+", " + ").Replace("-", " - ").Replace("*", " * ").Replace("/", " / ");
     List<string> list = expression.Split(' ').Where(x => x.Trim().Length > 0).ToList();
-    while(list.Count != 1)
+    while (list.Count != 1)
     {
         string operation = "";
         if (list.Contains("/"))
@@ -79,20 +64,44 @@ double EvaluateExpression(string expression)
         switch (operation)
         {
             case "+":
-                list[index] = (Convert.ToDouble(first) + Convert.ToDouble(last)).ToString();
+                list[index] = (Convert.ToDecimal(first) + Convert.ToDecimal(last)).ToString();
                 break;
             case "-":
-                list[index] = (Convert.ToDouble(first) - Convert.ToDouble(last)).ToString();
+                list[index] = (Convert.ToDecimal(first) - Convert.ToDecimal(last)).ToString();
                 break;
             case "*":
-                list[index] = (Convert.ToDouble(first) * Convert.ToDouble(last)).ToString();
+                list[index] = (Convert.ToDecimal(first) * Convert.ToDecimal(last)).ToString();
                 break;
             case "/":
-                list[index] = (Convert.ToDouble(first) / Convert.ToDouble(last)).ToString();
+                list[index] = (Convert.ToDecimal(first) / Convert.ToDecimal(last)).ToString();
                 break;
         }
         list.RemoveAt(index - 1);
         list.RemoveAt(index);
     }
-    return Convert.ToDouble(list.First());
+    return Convert.ToDecimal(list.First());
+}
+using (StreamReader streamReader = new StreamReader("../../../Large_Input.txt"))
+{
+    int n = Convert.ToInt32(streamReader.ReadLine());
+    string Cases = DecodeText(streamReader.ReadToEnd());
+    List<string> List = Cases.Split("\n").Take(n).ToList();
+    int Count = 1;
+    foreach (string tLine in List.Take(970))
+    {
+        string line = tLine.Replace(" ", "").Replace("\r", "");
+        string[] data = line.Split('=');
+        string Exp = data[0];
+        string ExpResult = data[1];
+        DataTable dt = new DataTable();
+        bool result = Convert.ToBoolean(dt.Compute(line, ""));
+        decimal ans = EvaluateExpression(Exp);
+        string sAns = ans.ToString();
+        int fLength = data[1].Contains(".") ? data[1].Substring(data[1].IndexOf(".")).Length - 1 : 0;
+        if (ans.ToString().Contains(".") && sAns.Substring(sAns.IndexOf(".")).Length - 1 < fLength)
+            fLength = sAns.Substring(sAns.IndexOf(".")).Length - 1;
+        string ResultFormat = (data[1].Contains(".") ? "#." + fLength : "");
+        bool cResult = ans.ToString(ResultFormat) == Convert.ToDecimal(ExpResult).ToString(ResultFormat);
+        Console.WriteLine("Case #" + Count++ + ": " + cResult);
+    }
 }
